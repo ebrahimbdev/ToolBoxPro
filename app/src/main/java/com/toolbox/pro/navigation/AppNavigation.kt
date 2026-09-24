@@ -90,12 +90,11 @@ fun ToolBoxNavHost() {
                         selected = selected,
                         onClick = {
                             if (screen.route == Screen.Home.route) {
-                                val startId = navController.graph.findStartDestination().id
-                                navController.popUpTo(startId) { inclusive = false }
-                                if (navController.currentDestination?.route != Screen.Home.route) {
-                                    navController.navigate(Screen.Home.route) {
-                                        launchSingleTop = true
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
                                     }
+                                    launchSingleTop = true
                                 }
                             } else {
                                 navController.navigate(screen.route) {

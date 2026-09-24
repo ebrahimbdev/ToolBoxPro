@@ -6,11 +6,15 @@ plugins {
     alias(libs.plugins.hilt.android)
 }
 
-val versionProps = java.util.Properties().apply {
-    rootProject.file("version.properties").inputStream().use { load(it) }
-}
-val appVersionName: String = versionProps.getProperty("VERSION_NAME", "1.0.0")
-val appVersionCode: Int = versionProps.getProperty("VERSION_CODE", "1").toInt()
+val versionMap = rootProject.file("version.properties")
+    .readLines()
+    .filter { it.isNotBlank() && !it.trimStart().startsWith("#") && it.contains('=') }
+    .associate { line ->
+        val idx = line.indexOf('=')
+        line.substring(0, idx).trim() to line.substring(idx + 1).trim()
+    }
+val appVersionName: String = versionMap["VERSION_NAME"] ?: "1.0.0"
+val appVersionCode: Int = versionMap["VERSION_CODE"]?.toIntOrNull() ?: 1
 
 android {
     namespace = "com.toolbox.admin"

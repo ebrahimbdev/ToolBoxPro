@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.pro.core.localization.LocalStrings
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 data class DeviceInfoItem(
@@ -156,7 +157,7 @@ private fun getDeviceInfo(context: Context, s: com.toolbox.pro.core.localization
     val memInfo = android.app.ActivityManager.MemoryInfo()
     am.getMemoryInfo(memInfo)
     val totalRamGb = memInfo.totalMem / (1024.0 * 1024 * 1024)
-    val df = DecimalFormat("#.#")
+    val df = DecimalFormat("#.#", DecimalFormatSymbols(Locale.ROOT))
     items.add(DeviceInfoItem(Icons.Filled.Storage, s.ram, "${df.format(totalRamGb)} GB"))
 
     try {
