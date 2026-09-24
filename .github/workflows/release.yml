@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump type
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      prerelease:
+        description: Mark as pre-release
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Bump, tag, build, publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: bump
+        run: |
+          set -euo pipefail
+          bump="${{ inputs.bump }}"
+          cur_name=$(grep '^VERSION_NAME=' version.properties | cut -d= -f2)
+          IFS='.' read -r major minor patch <<< "$cur_name"
+          major=${major:-0}; minor=${minor:-0}; patch=${patch:-0}
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+            *) echo "Unknown bump: $bump"; exit 1 ;;
+          esac
+          new_name="${major}.${minor}.${patch}"
+          cur_code=$(grep '^VERSION_CODE=' version.properties | cut -d= -f2)
+          new_code=$((cur_code + 1))
+          cat > version.properties <<EOF
+          # Single source of truth for app versioning.
+          # Bumped automatically by .github/workflows/release.yml
+          VERSION_NAME=${new_name}
+          VERSION_CODE=${new_code}
+          EOF
+          # strip accidental leading spaces from heredoc if any
+          sed -i 's/^[[:space:]]*//' version.properties
+          echo "name=${new_name}" >> "$GITHUB_OUTPUT"
+          echo "code=${new_code}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${new_name}" >> "$GITHUB_OUTPUT"
+          echo "Bumped ${cur_name} -> ${new_name} (code ${new_code})"
+
+      - name: Commit version bump
+        run: |
+          git add version.properties
+          git commit -m "chore(release): v${{ steps.bump.outputs.name }}"
+          git push
+
+      - name: Create tag
+        run: |
+          git tag -a "v${{ steps.bump.outputs.name }}" -m "Release v${{ steps.bump.outputs.name }}"
+          git push origin "v${{ steps.bump.outputs.name }}"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Stage APK asset
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk \
+            "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.apk"
+          ls -lh dist
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prerelease_flag=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            prerelease_flag="--prerelease"
+          fi
+          gh release create "v${{ steps.bump.outputs.name }}" \
+            "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.apk" \
+            --title "ToolBox Pro v${{ steps.bump.outputs.name }}" \
+            --notes "Automated release (versionCode ${{ steps.bump.outputs.code }})." \
+            $prerelease_flag
