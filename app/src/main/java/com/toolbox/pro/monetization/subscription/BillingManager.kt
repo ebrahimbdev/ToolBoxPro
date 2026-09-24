@@ -15,6 +15,6 @@ class BillingManager @Inject constructor(
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
 
     fun checkPremiumStatus() {
-        // TODO: Implement Google Play Billing when Google Maven is accessible
+        // Premium is managed remotely via subscription API (not Play Billing)
     }
 }

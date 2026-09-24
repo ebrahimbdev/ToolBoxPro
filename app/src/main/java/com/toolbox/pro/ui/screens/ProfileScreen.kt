@@ -169,6 +169,13 @@ fun ProfileScreen(navController: NavHostController? = null) {
             )
 
             SettingsItem(
+                icon = Icons.Filled.CreditCard,
+                title = s.upgradeTitle,
+                subtitle = s.freeTrialAds,
+                onClick = { navController?.navigate("payment") }
+            )
+
+            SettingsItem(
                 icon = Icons.Filled.Language,
                 title = s.language,
                 subtitle = AppLanguage.entries.find { it.code == currentLang }?.displayName ?: "English",

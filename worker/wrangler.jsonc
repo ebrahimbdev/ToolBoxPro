@@ -1,20 +1,19 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "toolboxpro-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "toolboxpro",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "vars": {
-    "APP_KEY": "toolbox-android"
-  },
-  "observability": {
-    "enabled": true
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "toolboxpro-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "toolboxpro",
+			"database_id": "484c9daf-7e13-4fb8-9083-75256bf161c9"
+		}
+	],
+	"vars": {
+		"APP_KEY": "toolbox-android"
+	},
+	"observability": {
+		"enabled": true
+	}
 }

@@ -35,6 +35,10 @@
 -keep class com.toolbox.pro.core.api.** { *; }
 -keepclassmembers class com.toolbox.pro.core.api.** { *; }
 
+# AdMob
+-keep class com.google.android.gms.ads.** { *; }
+-dontwarn com.google.android.gms.ads.**
+
 # Kotlin
 -dontwarn kotlin.**
 -keepattributes *Annotation*, InnerClasses, Signature

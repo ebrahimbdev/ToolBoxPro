@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.pro.core.localization.LocalStrings
+import com.toolbox.pro.monetization.admob.BannerAd
 import com.toolbox.pro.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +112,8 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            BannerAd(modifier = Modifier.fillMaxWidth())
 
             Card(
                 modifier = Modifier.fillMaxWidth(),

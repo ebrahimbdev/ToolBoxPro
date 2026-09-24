@@ -39,8 +39,11 @@ android {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
 
-        // Real AdMob App ID (Phase B will enable ads)
+        // Real AdMob App ID
         manifestPlaceholders["ADMOB_APP_ID"] = "ca-app-pub-5472399743614989~5222207906"
+
+        buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-5472399743614989/2565178410\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"ca-app-pub-5472399743614989/2565178410\"")
     }
 
     buildTypes {
@@ -145,10 +148,6 @@ dependencies {
     // QR Code (zxing only — unused coil/mlkit/qrose removed for size & startup speed)
     implementation(libs.zxing.core)
 
-    // TODO: Add AdMob, Billing, Firebase when Google Maven is accessible
-    // implementation(libs.gms.ads)
-    // implementation(libs.billing)
-    // implementation(platform(libs.firebase.bom))
-    // implementation(libs.firebase.analytics)
-    // implementation(libs.firebase.crashlytics)
+    // AdMob
+    implementation(libs.gms.ads)
 }

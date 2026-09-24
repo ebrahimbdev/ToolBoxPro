@@ -31,12 +31,17 @@ import androidx.navigation.compose.rememberNavController
 import com.toolbox.pro.core.identity.IdentityEntryPoint
 import com.toolbox.pro.core.localization.LocalStrings
 import com.toolbox.pro.fileshare.presentation.FileShareScreen
+import com.toolbox.pro.monetization.admob.AdEntryPoint
+import com.toolbox.pro.monetization.admob.AdManager
 import com.toolbox.pro.qr.presentation.QrGeneratorScreen
 import com.toolbox.pro.ui.screens.DeviceInfoScreen
 import com.toolbox.pro.ui.screens.HomeScreen
+import com.toolbox.pro.ui.screens.PaymentScreen
 import com.toolbox.pro.ui.screens.ProfileScreen
 import com.toolbox.pro.ui.screens.SpeedTestScreen
 import dagger.hilt.android.EntryPointAccessors
+import androidx.compose.runtime.remember
+import android.app.Activity
 
 sealed class Screen(
     val route: String,
@@ -50,6 +55,7 @@ sealed class Screen(
     data object Profile : Screen("profile", "profile", Icons.Filled.Person, Icons.Outlined.Person)
     data object SpeedTest : Screen("speed_test", "speedTest", Icons.Filled.Home, Icons.Outlined.Home)
     data object DeviceInfo : Screen("device_info", "deviceInfo", Icons.Filled.Home, Icons.Outlined.Home)
+    data object Payment : Screen("payment", "upgradeNow", Icons.Filled.Person, Icons.Outlined.Person)
 }
 
 val bottomNavItems = listOf(
@@ -81,7 +87,18 @@ fun ToolBoxNavHost() {
         "profile" -> s.profile
         "speedTest" -> s.speedTest
         "deviceInfo" -> s.deviceInfo
+        "upgradeNow" -> s.upgradeNow
         else -> key
+    }
+
+    val activity = context as? Activity
+    val adManager = remember(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AdEntryPoint::class.java
+            ).adManager()
+        }.getOrNull()
     }
 
     Scaffold(
@@ -102,6 +119,11 @@ fun ToolBoxNavHost() {
                         label = { Text(titleFor(screen.titleKey)) },
                         selected = selected,
                         onClick = {
+                            if (screen.route != Screen.Home.route && screen.route != Screen.Profile.route) {
+                                activity?.let { act ->
+                                    adManager?.maybeShowInterstitial(act) { }
+                                }
+                            }
                             if (screen.route == Screen.Home.route) {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -139,6 +161,7 @@ fun ToolBoxNavHost() {
             composable(Screen.Profile.route) { ProfileScreen(navController = navController) }
             composable(Screen.SpeedTest.route) { SpeedTestScreen() }
             composable(Screen.DeviceInfo.route) { DeviceInfoScreen() }
+            composable(Screen.Payment.route) { PaymentScreen(navController = navController) }
         }
     }
 }
