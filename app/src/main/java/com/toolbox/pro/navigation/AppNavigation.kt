@@ -89,12 +89,22 @@ fun ToolBoxNavHost() {
                         label = { Text(titleFor(screen.titleKey)) },
                         selected = selected,
                         onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (screen.route == Screen.Home.route) {
+                                val startId = navController.graph.findStartDestination().id
+                                navController.popUpTo(startId) { inclusive = false }
+                                if (navController.currentDestination?.route != Screen.Home.route) {
+                                    navController.navigate(Screen.Home.route) {
+                                        launchSingleTop = true
+                                    }
                                 }
-                                launchSingleTop = true
-                                restoreState = true
+                            } else {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         }
                     )

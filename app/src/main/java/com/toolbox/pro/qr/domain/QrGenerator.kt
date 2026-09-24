@@ -34,6 +34,7 @@ class QrGenerator @Inject constructor(
         val hints = HashMap<EncodeHintType, Any>().apply {
             put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H)
             put(EncodeHintType.MARGIN, 1)
+            put(EncodeHintType.CHARACTER_SET, "UTF-8")
         }
 
         val qrCodeWriter = QRCodeWriter()

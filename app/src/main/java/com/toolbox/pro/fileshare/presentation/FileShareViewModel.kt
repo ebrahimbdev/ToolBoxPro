@@ -52,11 +52,17 @@ class FileShareViewModel @Inject constructor(
 
     private fun loadNetworkInfo() {
         viewModelScope.launch {
+            val ip = WifiUtils.getDeviceIpAddress(appContext)
             _uiState.value = _uiState.value.copy(
-                deviceIp = WifiUtils.getDeviceIpAddress(appContext),
+                deviceIp = ip,
                 wifiSsid = WifiUtils.getWifiSsid(appContext),
                 networkSpeed = WifiUtils.getNetworkSpeed(appContext),
-                isWifiConnected = WifiUtils.isWifiConnected(appContext)
+                isWifiConnected = WifiUtils.isWifiConnected(appContext),
+                serverUrl = if (_uiState.value.isServerRunning) {
+                    WifiUtils.buildServerUrl(ip) ?: _uiState.value.serverUrl
+                } else {
+                    _uiState.value.serverUrl
+                }
             )
         }
     }
@@ -64,7 +70,15 @@ class FileShareViewModel @Inject constructor(
     private fun observeServerState() {
         viewModelScope.launch {
             FileServerService.isRunning.collect { running ->
-                _uiState.value = _uiState.value.copy(isServerRunning = running)
+                _uiState.value = if (running) {
+                    val url = WifiUtils.buildServerUrl(_uiState.value.deviceIp)
+                    _uiState.value.copy(
+                        isServerRunning = true,
+                        serverUrl = url ?: _uiState.value.serverUrl
+                    )
+                } else {
+                    _uiState.value.copy(isServerRunning = false, serverUrl = null, showQrDialog = false)
+                }
             }
         }
     }
@@ -142,7 +156,7 @@ class FileShareViewModel @Inject constructor(
     }
 
     fun startServer() {
-        val ip = _uiState.value.deviceIp ?: return
+        val url = WifiUtils.buildServerUrl(_uiState.value.deviceIp) ?: return
         val files = buildSharedFiles()
 
         val intent = Intent(appContext, FileServerService::class.java).apply {
@@ -151,9 +165,7 @@ class FileShareViewModel @Inject constructor(
             putExtra(FileServerService.EXTRA_FILES_JSON, ArrayList(files))
         }
         appContext.startForegroundService(intent)
-        _uiState.value = _uiState.value.copy(
-            serverUrl = "http://$ip:8080"
-        )
+        _uiState.value = _uiState.value.copy(serverUrl = url)
     }
 
     fun stopServer() {

@@ -6,13 +6,37 @@ import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import java.util.Locale
 
 object WifiUtils {
 
+    fun toLatinDigits(input: String): String {
+        val sb = StringBuilder(input.length)
+        for (c in input) {
+            when (c) {
+                in '۰'..'۹' -> sb.append(('0'.code + (c - '۰')).toChar())
+                in '٠'..'٩' -> sb.append(('0'.code + (c - '٠')).toChar())
+                else -> sb.append(c)
+            }
+        }
+        return sb.toString()
+    }
+
+    fun normalizeIp(ip: String?): String? {
+        if (ip.isNullOrBlank()) return null
+        val cleaned = toLatinDigits(ip).trim()
+        return if (cleaned.matches(Regex("""^\d{1,3}(\.\d{1,3}){3}$"""))) cleaned else null
+    }
+
+    fun buildServerUrl(ip: String?, port: Int = 8080): String? {
+        val normalized = normalizeIp(ip) ?: return null
+        return "http://$normalized:$port"
+    }
+
     fun getDeviceIpAddress(context: Context): String? {
         val wifiIp = getWifiIpAddress(context)
-        if (wifiIp != null) return wifiIp
-        return getNetworkInterfaceIp()
+        if (wifiIp != null) return normalizeIp(wifiIp) ?: wifiIp
+        return normalizeIp(getNetworkInterfaceIp()) ?: getNetworkInterfaceIp()
     }
 
     private fun getWifiIpAddress(context: Context): String? {
@@ -22,6 +46,7 @@ object WifiUtils {
             @Suppress("DEPRECATION")
             val ip = wifiManager.connectionInfo.ipAddress
             String.format(
+                Locale.US,
                 "%d.%d.%d.%d",
                 ip and 0xff,
                 ip shr 8 and 0xff,

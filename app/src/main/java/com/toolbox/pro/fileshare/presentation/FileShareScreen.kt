@@ -70,6 +70,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.toolbox.pro.core.localization.LocalStrings
 import com.toolbox.pro.qr.domain.QrGenerator
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -190,12 +192,15 @@ fun FileShareScreen(
                                 Text(uiState.serverUrl ?: "--", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                                 Text(s.shareUrlHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    FilledTonalButton(onClick = { viewModel.toggleQrDialog(true) }, shape = RoundedCornerShape(10.dp)) {
-                                        Icon(Icons.Filled.QrCode, null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(s.showQr, style = MaterialTheme.typography.bodySmall)
-                                    }
+                                Button(
+                                    onClick = { viewModel.toggleQrDialog(true) },
+                                    enabled = uiState.serverUrl != null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Filled.QrCode, null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(s.showQr)
                                 }
                             }
                         }
@@ -279,7 +284,7 @@ fun QrForLinkDialog(url: String, onDismiss: () -> Unit) {
 
 @Composable
 fun FileItem(file: SelectedFile, onRemove: () -> Unit) {
-    val df = DecimalFormat("#,##0.#")
+    val df = DecimalFormat("#,##0.#", DecimalFormatSymbols(Locale.ROOT))
 
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
