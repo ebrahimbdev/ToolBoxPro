@@ -81,6 +81,19 @@ fun FileShareScreen(
     val s = LocalStrings.current
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val identityEntry = remember(context) {
+        runCatching {
+            dagger.hilt.android.EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                com.toolbox.pro.core.identity.IdentityEntryPoint::class.java
+            )
+        }.getOrNull()
+    }
+    val username by if (identityEntry != null) {
+        identityEntry.identityStore().username.collectAsState(initial = "")
+    } else {
+        remember { androidx.compose.runtime.mutableStateOf("") }
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -178,8 +191,15 @@ fun FileShareScreen(
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(s.fileServer, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    if (username.isNotBlank()) {
+                        Text(
+                            "Shared by: $username",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     AnimatedVisibility(visible = uiState.isServerRunning, enter = fadeIn(), exit = fadeOut()) {
                         Card(

@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,6 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.toolbox.pro.core.identity.IdentityEntryPoint
 import com.toolbox.pro.core.localization.LocalStrings
 import com.toolbox.pro.fileshare.presentation.FileShareScreen
 import com.toolbox.pro.qr.presentation.QrGeneratorScreen
@@ -34,6 +36,7 @@ import com.toolbox.pro.ui.screens.DeviceInfoScreen
 import com.toolbox.pro.ui.screens.HomeScreen
 import com.toolbox.pro.ui.screens.ProfileScreen
 import com.toolbox.pro.ui.screens.SpeedTestScreen
+import dagger.hilt.android.EntryPointAccessors
 
 sealed class Screen(
     val route: String,
@@ -60,6 +63,16 @@ val bottomNavItems = listOf(
 fun ToolBoxNavHost() {
     val navController = rememberNavController()
     val s = LocalStrings.current
+    val context = LocalContext.current
+
+    LaunchedEffect(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                IdentityEntryPoint::class.java
+            ).remoteConfigRepository().registerAndHeartbeat(toolOpens = 1)
+        }
+    }
 
     fun titleFor(key: String): String = when (key) {
         "home" -> s.home

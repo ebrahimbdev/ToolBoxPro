@@ -17,5 +17,9 @@
 # DataStore
 -keep class * extends androidx.datastore.preferences.core.Preferences$Key { *; }
 
+# Admin DTOs
+-keep class com.toolbox.admin.data.model.** { *; }
+-keepclassmembers class com.toolbox.admin.data.model.** { *; }
+
 # Firebase
 -keep class com.google.firebase.** { *; }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -28,12 +29,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +53,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.toolbox.pro.core.config.RemoteConfigRepository
+import com.toolbox.pro.core.identity.IdentityEntryPoint
 import com.toolbox.pro.core.localization.AppLanguage
 import com.toolbox.pro.core.localization.LanguageEntryPoint
 import com.toolbox.pro.core.localization.LocalStrings
@@ -63,6 +68,8 @@ fun ProfileScreen(navController: NavHostController? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showUsernameDialog by remember { mutableStateOf(false) }
+    var usernameDraft by remember { mutableStateOf("") }
 
     val languageRepo = remember(context) {
         runCatching {
@@ -70,11 +77,31 @@ fun ProfileScreen(navController: NavHostController? = null) {
                 .languageRepository()
         }.getOrNull()
     }
+    val identityEntry = remember(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(context.applicationContext, IdentityEntryPoint::class.java)
+        }.getOrNull()
+    }
+    val remoteConfig = remember(context) {
+        identityEntry?.remoteConfigRepository()
+    }
+    val config by if (remoteConfig != null) {
+        remoteConfig.config.collectAsState()
+    } else {
+        remember { mutableStateOf(com.toolbox.pro.core.api.RemoteConfigDto()) }
+    }
+    val username by if (identityEntry != null) {
+        identityEntry.identityStore().username.collectAsState(initial = "")
+    } else {
+        remember { mutableStateOf("") }
+    }
     val currentLang by if (languageRepo != null) {
         languageRepo.language.collectAsState(initial = "en")
     } else {
         remember { androidx.compose.runtime.mutableStateOf("en") }
     }
+
+    LaunchedEffect(remoteConfig) { remoteConfig?.refresh() }
 
     Scaffold(
         topBar = {
@@ -108,15 +135,38 @@ fun ProfileScreen(navController: NavHostController? = null) {
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text(s.freePlan, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text("ToolBox Pro", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
+                                Text(
+                                    username.ifBlank { s.freeTrialAds },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    if (config.subscriptionPriceToman > 0) {
+                                        "${config.subscriptionPriceToman} Toman · ${config.subscriptionDurationDays}d"
+                                    } else {
+                                        "ToolBox Pro"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(s.upgradeDesc, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
+                        Text(s.freeTrialAds, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
                     }
                 }
             }
+
+            SettingsItem(
+                icon = Icons.Filled.Person,
+                title = s.username,
+                subtitle = username.ifBlank { s.chooseUsername },
+                onClick = {
+                    usernameDraft = username
+                    showUsernameDialog = true
+                }
+            )
 
             SettingsItem(
                 icon = Icons.Filled.Language,
@@ -125,10 +175,41 @@ fun ProfileScreen(navController: NavHostController? = null) {
                 onClick = { showLanguageDialog = true }
             )
 
-            SettingsItem(icon = Icons.Filled.CreditCard, title = s.premiumSubscription, subtitle = s.viewPlans)
             SettingsItem(icon = Icons.Filled.Palette, title = s.appearanceSettings, subtitle = s.darkModeColors)
-            SettingsItem(icon = Icons.Filled.Info, title = s.about, subtitle = "v1.0.0")
+            SettingsItem(icon = Icons.Filled.Info, title = s.about, subtitle = "ToolBox Pro")
         }
+    }
+
+    if (showUsernameDialog && identityEntry != null) {
+        val store = identityEntry.identityStore()
+        AlertDialog(
+            onDismissRequest = { showUsernameDialog = false },
+            title = { Text(s.editUsername) },
+            text = {
+                OutlinedTextField(
+                    value = usernameDraft,
+                    onValueChange = { usernameDraft = it.take(64) },
+                    label = { Text(s.username) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = usernameDraft.isNotBlank(),
+                    onClick = {
+                        scope.launch {
+                            store.setUsername(usernameDraft)
+                            remoteConfig?.registerAndHeartbeat()
+                            showUsernameDialog = false
+                        }
+                    }
+                ) { Text(s.done) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUsernameDialog = false }) { Text(s.done) }
+            }
+        )
     }
 
     if (showLanguageDialog) {

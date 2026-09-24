@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local wrangler
+ADMIN_TOKEN=change-me-admin
+APP_HMAC_SECRET=change-me-hmac
+APP_KEY=toolbox-android

@@ -39,8 +39,8 @@ android {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
 
-        // AdMob Test App ID
-        manifestPlaceholders["ADMOB_APP_ID"] = "ca-app-pub-3940256099942544~3347511713"
+        // Real AdMob App ID (Phase B will enable ads)
+        manifestPlaceholders["ADMOB_APP_ID"] = "ca-app-pub-5472399743614989~5222207906"
     }
 
     buildTypes {
@@ -48,6 +48,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("String", "API_BASE_URL", "\"https://toolboxpro-api.ebrahimbdev.workers.dev\"")
+            buildConfigField("String", "APP_KEY", "\"toolbox-android\"")
+            buildConfigField("String", "APP_HMAC_SECRET", "\"dev\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,6 +60,9 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
             isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://toolboxpro-api.ebrahimbdev.workers.dev\"")
+            buildConfigField("String", "APP_KEY", "\"toolbox-android\"")
+            buildConfigField("String", "APP_HMAC_SECRET", "\"dev\"")
         }
     }
 

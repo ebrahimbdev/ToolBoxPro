@@ -31,6 +31,10 @@
 -keep class com.toolbox.pro.fileshare.server.SharedFile { *; }
 -keepclassmembers class com.toolbox.pro.fileshare.server.SharedFile { *; }
 
+# API DTOs
+-keep class com.toolbox.pro.core.api.** { *; }
+-keepclassmembers class com.toolbox.pro.core.api.** { *; }
+
 # Kotlin
 -dontwarn kotlin.**
 -keepattributes *Annotation*, InnerClasses, Signature
