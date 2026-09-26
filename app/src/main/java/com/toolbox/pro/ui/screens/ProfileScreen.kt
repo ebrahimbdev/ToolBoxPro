@@ -1,5 +1,7 @@
 package com.toolbox.pro.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -60,6 +63,8 @@ import com.toolbox.pro.core.localization.LanguageEntryPoint
 import com.toolbox.pro.core.localization.LocalStrings
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
+
+private const val PRIVACY_POLICY_URL = "https://ebrahimbdev.github.io/ToolBoxPro/"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -183,6 +188,16 @@ fun ProfileScreen(navController: NavHostController? = null) {
             )
 
             SettingsItem(icon = Icons.Filled.Palette, title = s.appearanceSettings, subtitle = s.darkModeColors)
+            SettingsItem(
+                icon = Icons.Filled.PrivacyTip,
+                title = s.privacyPolicy,
+                subtitle = "ebrahimbdev.github.io",
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+                    runCatching { context.startActivity(intent) }
+                }
+            )
+
             SettingsItem(icon = Icons.Filled.Info, title = s.about, subtitle = "ToolBox Pro")
         }
     }

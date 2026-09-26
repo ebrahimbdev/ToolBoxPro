@@ -46,11 +46,26 @@ android {
         buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"ca-app-pub-5472399743614989/2565178410\"")
     }
 
+    signingConfigs {
+        // Play release keystore comes from CI/user environment — never committed.
+        val playStorePath = System.getenv("PLAY_KEYSTORE_PATH")
+        if (!playStorePath.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(playStorePath)
+                storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("PLAY_KEYSTORE_ALIAS") ?: "upload"
+                keyPassword = System.getenv("PLAY_KEYSTORE_KEY_PASSWORD")
+                    ?: System.getenv("PLAY_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug")
             buildConfigField("String", "API_BASE_URL", "\"https://toolboxpro-api.ebrahimbdev.workers.dev\"")
             buildConfigField("String", "APP_KEY", "\"toolbox-android\"")
             buildConfigField("String", "APP_HMAC_SECRET", "\"dev\"")

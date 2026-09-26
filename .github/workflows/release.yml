@@ -95,14 +95,40 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Restore Play keystore (optional)
+        env:
+          PLAY_KEYSTORE_B64: ${{ secrets.PLAY_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PLAY_KEYSTORE_B64:-}" ]; then
+            printf '%s' "$PLAY_KEYSTORE_B64" | base64 -d > play.keystore
+            echo "PLAY_KEYSTORE_PATH=$PWD/play.keystore" >> "$GITHUB_ENV"
+            echo "Play keystore restored"
+          else
+            echo "No PLAY_KEYSTORE_B64 secret — release build falls back to debug signing"
+          fi
+
       - name: Build release APK
+        env:
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEYSTORE_ALIAS: ${{ secrets.PLAY_KEYSTORE_ALIAS }}
+          PLAY_KEYSTORE_KEY_PASSWORD: ${{ secrets.PLAY_KEYSTORE_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --no-daemon
 
-      - name: Stage APK asset
+      - name: Build release AAB (Play upload)
+        env:
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEYSTORE_ALIAS: ${{ secrets.PLAY_KEYSTORE_ALIAS }}
+          PLAY_KEYSTORE_KEY_PASSWORD: ${{ secrets.PLAY_KEYSTORE_KEY_PASSWORD }}
+        run: ./gradlew :app:bundleRelease --no-daemon
+
+      - name: Stage assets
         run: |
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk \
             "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab \
+            "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.aab"
           ls -lh dist
 
       - name: Create GitHub Release
@@ -115,6 +141,7 @@ jobs:
           fi
           gh release create "v${{ steps.bump.outputs.name }}" \
             "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.apk" \
+            "dist/ToolBoxPro-v${{ steps.bump.outputs.name }}.aab" \
             --title "ToolBox Pro v${{ steps.bump.outputs.name }}" \
             --notes "Automated release (versionCode ${{ steps.bump.outputs.code }})." \
             $prerelease_flag
