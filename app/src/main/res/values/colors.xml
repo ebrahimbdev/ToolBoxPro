@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="seed">#FF6750A4</color>
+    <color name="seed">#FF6C63FF</color>
+    <color name="window_background">#FFE8ECF3</color>
     <color name="ic_launcher_background">#FF0B0F1E</color>
     <color name="md_theme_primary">#FF6750A4</color>
     <color name="md_theme_onPrimary">#FFFFFFFF</color>
