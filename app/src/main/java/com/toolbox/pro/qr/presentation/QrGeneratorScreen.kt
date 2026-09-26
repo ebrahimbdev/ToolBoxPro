@@ -157,6 +157,17 @@ fun QrGeneratorScreen(
                         maxLines = 5,
                         shape = RoundedCornerShape(12.dp)
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { viewModel.onGenerateClick() },
+                        enabled = uiState.content.isNotBlank() && !uiState.isGenerating,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Filled.QrCode, null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(s.generateQr, style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
 
@@ -183,10 +194,22 @@ fun QrGeneratorScreen(
                                 modifier = Modifier
                                     .size(240.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                    .background(
+                                        if (uiState.isStale) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    )
                                     .padding(8.dp),
-                                contentScale = ContentScale.Fit
+                                contentScale = ContentScale.Fit,
+                                alpha = if (uiState.isStale) 0.5f else 1f
                             )
+                            if (uiState.isStale) {
+                                Text(
+                                    s.contentChanged,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Button(onClick = { viewModel.saveQrToGallery(context) }, shape = RoundedCornerShape(12.dp)) {
                                     Icon(Icons.Filled.Save, null)

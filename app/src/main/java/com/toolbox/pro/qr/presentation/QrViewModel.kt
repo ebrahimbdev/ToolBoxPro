@@ -26,6 +26,7 @@ data class QrUiState(
     val content: String = "",
     val contentType: String = "URL",
     val qrBitmap: Bitmap? = null,
+    val generatedForContent: String? = null,
     val logoBitmap: Bitmap? = null,
     val primaryColor: Long = 0xFF000000,
     val secondaryColor: Long = 0xFF6C63FF,
@@ -33,7 +34,10 @@ data class QrUiState(
     val history: List<QrHistoryEntity> = emptyList(),
     val isGenerating: Boolean = false,
     val saveMessage: String? = null
-)
+) {
+    val isStale: Boolean
+        get() = qrBitmap != null && generatedForContent != null && content != generatedForContent
+}
 
 @HiltViewModel
 class QrViewModel @Inject constructor(
@@ -54,6 +58,9 @@ class QrViewModel @Inject constructor(
 
     fun onContentChange(content: String) {
         _uiState.value = _uiState.value.copy(content = content)
+    }
+
+    fun onGenerateClick() {
         generateQr()
     }
 
@@ -71,13 +78,13 @@ class QrViewModel @Inject constructor(
                 MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
             }
             _uiState.value = _uiState.value.copy(logoBitmap = bitmap)
-            generateQr()
+            if (_uiState.value.qrBitmap != null) generateQr()
         }
     }
 
     fun onLogoRemoved() {
         _uiState.value = _uiState.value.copy(logoBitmap = null)
-        generateQr()
+        if (_uiState.value.qrBitmap != null) generateQr()
     }
 
     fun onPrimaryColorChange(color: Long) {
@@ -98,7 +105,7 @@ class QrViewModel @Inject constructor(
     private fun generateQr() {
         val content = _uiState.value.content
         if (content.isBlank()) {
-            _uiState.value = _uiState.value.copy(qrBitmap = null)
+            _uiState.value = _uiState.value.copy(qrBitmap = null, generatedForContent = null, isGenerating = false)
             return
         }
 
@@ -113,7 +120,11 @@ class QrViewModel @Inject constructor(
                     secondaryColor = _uiState.value.secondaryColor,
                     useGradient = _uiState.value.useGradient
                 )
-                _uiState.value = _uiState.value.copy(qrBitmap = bitmap, isGenerating = false)
+                _uiState.value = _uiState.value.copy(
+                    qrBitmap = bitmap,
+                    generatedForContent = _uiState.value.content,
+                    isGenerating = false
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isGenerating = false)
             }
