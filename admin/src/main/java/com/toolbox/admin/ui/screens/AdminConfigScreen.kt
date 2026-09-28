@@ -48,6 +48,7 @@ fun AdminConfigScreen(
     var banner by remember { mutableStateOf(true) }
     var interstitial by remember { mutableStateOf(true) }
     var multiplier by remember { mutableStateOf("") }
+    var freeUses by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var cardNumber by remember { mutableStateOf("") }
@@ -62,6 +63,7 @@ fun AdminConfigScreen(
             banner = c.bannerEnabled == 1
             interstitial = c.interstitialEnabled == 1
             multiplier = c.freeAdMultiplier.toString()
+            freeUses = c.freeUsesPerAd.toString()
             price = c.subscriptionPriceToman.toString()
             duration = c.subscriptionDurationDays.toString()
             cardNumber = c.cardNumber
@@ -111,6 +113,20 @@ fun AdminConfigScreen(
                 value = multiplier,
                 onValueChange = { multiplier = it },
                 label = { Text("Free ad multiplier") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = freeUses,
+                onValueChange = { freeUses = it },
+                label = { Text("Free tool entries per ad (0 = unlimited)") },
+                supportingText = {
+                    Text(
+                        "How many times a user may open a tool before an ad is required.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -188,6 +204,7 @@ fun AdminConfigScreen(
                             bannerEnabled = if (banner) 1 else 0,
                             interstitialEnabled = if (interstitial) 1 else 0,
                             freeAdMultiplier = multiplier.toIntOrNull(),
+                            freeUsesPerAd = freeUses.toIntOrNull(),
                             subscriptionPriceToman = price.toIntOrNull(),
                             subscriptionDurationDays = duration.toIntOrNull(),
                             cardNumber = cardNumber,

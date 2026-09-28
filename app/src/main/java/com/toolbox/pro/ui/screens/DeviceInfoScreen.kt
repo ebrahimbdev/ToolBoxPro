@@ -13,12 +13,15 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.telephony.TelephonyManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,9 +40,13 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.ScreenLockPortrait
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,10 +54,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +67,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.toolbox.pro.core.localization.LocalStrings
+import com.toolbox.pro.fileshare.network.WifiUtils
+import com.toolbox.pro.ui.components.ToolHeader
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -71,21 +81,27 @@ data class DeviceInfoItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeviceInfoScreen() {
+fun DeviceInfoScreen(onBack: (() -> Unit)? = null) {
     val s = LocalStrings.current
     val context = LocalContext.current
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-    val items = remember {
-        getDeviceInfo(context, s)
-    }
+    val hardwareItems = remember(s) { getDeviceInfo(context, s) }
+    val networkItems = remember(s) { getNetworkInfo(context, s) }
+    val items = if (selectedTab == 0) hardwareItems else networkItems
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(s.deviceInfo, fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            ToolHeader(
+                title = s.deviceInfo,
+                icon = Icons.Filled.Info,
+                onBack = onBack,
+                tabs = listOf(s.tabHardware, s.tabNetwork),
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
             )
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -178,6 +194,36 @@ private fun getDeviceInfo(context: Context, s: com.toolbox.pro.core.localization
             else -> "Discharging"
         }
         items.add(DeviceInfoItem(Icons.Filled.BatteryFull, s.battery, "$level% ($statusText)"))
+    } catch (_: Exception) {}
+
+    return items
+}
+
+private fun getNetworkInfo(context: Context, s: com.toolbox.pro.core.localization.Strings): List<DeviceInfoItem> {
+    val items = mutableListOf<DeviceInfoItem>()
+
+    val wifiConnected = WifiUtils.isWifiConnected(context)
+    items.add(DeviceInfoItem(Icons.Filled.Wifi, s.wifiLabel, if (wifiConnected) s.connected else s.disconnected))
+    items.add(DeviceInfoItem(Icons.Filled.Router, s.ssid, WifiUtils.getWifiSsid(context) ?: "--"))
+    items.add(DeviceInfoItem(Icons.Filled.Router, s.ipAddress, WifiUtils.getDeviceIpAddress(context) ?: "--"))
+
+    try {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork)
+        val type = when {
+            caps == null -> "--"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WiFi"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobile data"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
+            else -> "Other"
+        }
+        items.add(DeviceInfoItem(Icons.Filled.SignalCellularAlt, s.connectionType, type))
+    } catch (_: Exception) {}
+
+    try {
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val carrier = tm.networkOperatorName
+        items.add(DeviceInfoItem(Icons.Filled.SimCard, s.carrier, if (carrier.isNullOrBlank()) "--" else carrier))
     } catch (_: Exception) {}
 
     return items

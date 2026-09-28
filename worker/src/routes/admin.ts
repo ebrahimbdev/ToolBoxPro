@@ -29,6 +29,10 @@ export async function handleAdminRoute(request: Request, env: Env, path: string)
       .prepare("SELECT COUNT(*) AS c FROM users WHERE last_seen > ?")
       .bind(now() - 7 * 24 * 60 * 60 * 1000)
       .first<{ c: number }>();
+    const onlineUsers = await env.DB
+      .prepare("SELECT COUNT(*) AS c FROM users WHERE last_seen > ?")
+      .bind(now() - 2 * 60 * 1000)
+      .first<{ c: number }>();
     const premiumUsers = await env.DB
       .prepare("SELECT COUNT(DISTINCT user_id) AS c FROM subscriptions WHERE status='active' AND expires_at > ?")
       .bind(now())
@@ -47,6 +51,7 @@ export async function handleAdminRoute(request: Request, env: Env, path: string)
     return json({
       total_users: totalUsers?.c ?? 0,
       active_users_7d: activeUsers?.c ?? 0,
+      online_users: onlineUsers?.c ?? 0,
       premium_users: premiumUsers?.c ?? 0,
       pending_payments: pendingPayments?.c ?? 0,
       total_ad_views: totalAdViews?.c ?? 0,
@@ -229,6 +234,7 @@ export async function handleAdminRoute(request: Request, env: Env, path: string)
       banner_enabled: bool01(body.banner_enabled, Number(current.banner_enabled)),
       interstitial_enabled: bool01(body.interstitial_enabled, Number(current.interstitial_enabled)),
       free_ad_multiplier: clampInt(body.free_ad_multiplier, 1, 10, Number(current.free_ad_multiplier)),
+      free_uses_per_ad: clampInt(body.free_uses_per_ad, 0, 100, Number(current.free_uses_per_ad ?? 0)),
       subscription_price_toman: clampInt(
         body.subscription_price_toman,
         0,
@@ -259,6 +265,7 @@ export async function handleAdminRoute(request: Request, env: Env, path: string)
       .prepare(
         `UPDATE remote_config SET
            ad_interval_seconds=?, banner_enabled=?, interstitial_enabled=?, free_ad_multiplier=?,
+           free_uses_per_ad=?,
            subscription_price_toman=?, subscription_duration_days=?, card_number=?, card_holder=?,
            crypto_wallet=?, crypto_network=?, gateway_enabled=?, gateway_status_note=?, updated_at=?
          WHERE key='app'`
@@ -268,6 +275,7 @@ export async function handleAdminRoute(request: Request, env: Env, path: string)
         next.banner_enabled,
         next.interstitial_enabled,
         next.free_ad_multiplier,
+        next.free_uses_per_ad,
         next.subscription_price_toman,
         next.subscription_duration_days,
         next.card_number,

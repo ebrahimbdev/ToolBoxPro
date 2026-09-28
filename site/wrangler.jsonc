@@ -1,0 +1,17 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "dastet-site",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	"routes": [
+		{ "pattern": "dastet.ir/*", "zone_name": "dastet.ir" },
+		{ "pattern": "*.dastet.ir/*", "zone_name": "dastet.ir" }
+	],
+	"observability": {
+		"enabled": true
+	}
+}

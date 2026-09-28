@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 data class AdminStats(
     @SerialName("total_users") val totalUsers: Int = 0,
     @SerialName("active_users_7d") val activeUsers7d: Int = 0,
+    @SerialName("online_users") val onlineUsers: Int = 0,
     @SerialName("premium_users") val premiumUsers: Int = 0,
     @SerialName("pending_payments") val pendingPayments: Int = 0,
     @SerialName("total_ad_views") val totalAdViews: Int = 0,
@@ -67,6 +68,7 @@ data class AdminConfig(
     @SerialName("banner_enabled") val bannerEnabled: Int = 1,
     @SerialName("interstitial_enabled") val interstitialEnabled: Int = 1,
     @SerialName("free_ad_multiplier") val freeAdMultiplier: Int = 2,
+    @SerialName("free_uses_per_ad") val freeUsesPerAd: Int = 0,
     @SerialName("subscription_price_toman") val subscriptionPriceToman: Int = 150000,
     @SerialName("subscription_duration_days") val subscriptionDurationDays: Int = 30,
     @SerialName("card_number") val cardNumber: String = "",
@@ -103,6 +105,7 @@ data class ConfigPatch(
     @SerialName("banner_enabled") val bannerEnabled: Int? = null,
     @SerialName("interstitial_enabled") val interstitialEnabled: Int? = null,
     @SerialName("free_ad_multiplier") val freeAdMultiplier: Int? = null,
+    @SerialName("free_uses_per_ad") val freeUsesPerAd: Int? = null,
     @SerialName("subscription_price_toman") val subscriptionPriceToman: Int? = null,
     @SerialName("subscription_duration_days") val subscriptionDurationDays: Int? = null,
     @SerialName("card_number") val cardNumber: String? = null,

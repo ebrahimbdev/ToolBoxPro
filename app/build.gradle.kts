@@ -38,12 +38,6 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
-
-        // Real AdMob App ID
-        manifestPlaceholders["ADMOB_APP_ID"] = "ca-app-pub-5472399743614989~5222207906"
-
-        buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"ca-app-pub-5472399743614989/2565178410\"")
-        buildConfigField("String", "ADMOB_INTERSTITIAL_UNIT_ID", "\"ca-app-pub-5472399743614989/2565178410\"")
     }
 
     signingConfigs {
@@ -162,7 +156,4 @@ dependencies {
 
     // QR Code (zxing only — unused coil/mlkit/qrose removed for size & startup speed)
     implementation(libs.zxing.core)
-
-    // AdMob
-    implementation(libs.gms.ads)
 }

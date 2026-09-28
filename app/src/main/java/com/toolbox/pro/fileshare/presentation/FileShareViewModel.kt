@@ -156,6 +156,8 @@ class FileShareViewModel @Inject constructor(
     }
 
     fun startServer() {
+        if (!_uiState.value.isWifiConnected) return
+        if (_uiState.value.selectedFiles.isEmpty()) return
         val url = WifiUtils.buildServerUrl(_uiState.value.deviceIp) ?: return
         val files = buildSharedFiles()
 
@@ -174,6 +176,10 @@ class FileShareViewModel @Inject constructor(
         }
         appContext.startService(intent)
         _uiState.value = _uiState.value.copy(serverUrl = null, showQrDialog = false)
+    }
+
+    fun toggleServer(enable: Boolean) {
+        if (enable) startServer() else stopServer()
     }
 
     fun refreshNetworkInfo() {

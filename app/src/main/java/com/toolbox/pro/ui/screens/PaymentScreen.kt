@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ContentCopy
@@ -40,7 +40,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,7 +61,7 @@ import com.toolbox.pro.core.api.AppApi
 import com.toolbox.pro.core.config.RemoteConfigRepository
 import com.toolbox.pro.core.identity.IdentityEntryPoint
 import com.toolbox.pro.core.localization.LocalStrings
-import com.toolbox.pro.monetization.admob.BannerAd
+import com.toolbox.pro.ui.components.ToolHeader
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
 
@@ -130,15 +129,13 @@ fun PaymentScreen(navController: NavHostController? = null) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(s.upgradeTitle, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController?.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                }
+            ToolHeader(
+                title = s.upgradeTitle,
+                icon = Icons.Filled.CreditCard,
+                onBack = { navController?.popBackStack() }
             )
         },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         Column(
@@ -193,8 +190,6 @@ fun PaymentScreen(navController: NavHostController? = null) {
                 enabled = true,
                 onClick = { selectedMethod = "card" }
             )
-
-            BannerAd(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 

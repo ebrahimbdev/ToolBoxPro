@@ -49,6 +49,16 @@ class AdminViewModel @Inject constructor(
     private val _config = MutableStateFlow<AdminConfig?>(null)
     val config: StateFlow<AdminConfig?> = _config.asStateFlow()
 
+    private val _lastRefreshAt = MutableStateFlow(0L)
+    val lastRefreshAt: StateFlow<Long> = _lastRefreshAt.asStateFlow()
+
+    private val _live = MutableStateFlow(false)
+    val live: StateFlow<Boolean> = _live.asStateFlow()
+
+    private var liveJob: kotlinx.coroutines.Job? = null
+    private var lastQuery: String = ""
+    private var lastLiveError: String? = null
+
     sealed class AuthState {
         data object Unknown : AuthState()
         data object LoggedOut : AuthState()
@@ -81,6 +91,7 @@ class AdminViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            stopLive()
             session.logout()
             _authState.value = AuthState.LoggedOut
             _stats.value = null
@@ -119,7 +130,49 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Near-real-time mode: silently re-pulls the user list and stats every
+     * [intervalMs] while the screen is open, so devices appear/update live.
+     */
+    fun startLive(intervalMs: Long = 5_000L) {
+        if (liveJob?.isActive == true) return
+        _live.value = true
+        liveJob = viewModelScope.launch {
+            while (true) {
+                refreshQuiet()
+                kotlinx.coroutines.delay(intervalMs)
+            }
+        }
+    }
+
+    fun stopLive() {
+        liveJob?.cancel()
+        liveJob = null
+        _live.value = false
+    }
+
+    private suspend fun refreshQuiet() {
+        var failed = false
+        when (val r = api.users(q = lastQuery)) {
+            is AdminApiResult.Success -> _users.value = r.data.users
+            is AdminApiResult.Failure -> {
+                failed = true
+                if (r.message != lastLiveError) {
+                    lastLiveError = r.message
+                    _ui.value = _ui.value.copy(error = r.message)
+                }
+            }
+        }
+        when (val r = api.stats()) {
+            is AdminApiResult.Success -> _stats.value = r.data
+            is AdminApiResult.Failure -> Unit
+        }
+        if (!failed) lastLiveError = null
+        _lastRefreshAt.value = System.currentTimeMillis()
+    }
+
     fun searchUsers(q: String) {
+        lastQuery = q
         viewModelScope.launch {
             when (val r = api.users(q = q)) {
                 is AdminApiResult.Success -> _users.value = r.data.users

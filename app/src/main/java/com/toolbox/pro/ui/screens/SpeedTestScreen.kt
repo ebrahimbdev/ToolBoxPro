@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,8 +39,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,6 +62,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.toolbox.pro.core.localization.LocalStrings
 import com.toolbox.pro.fileshare.network.WifiUtils
+import com.toolbox.pro.ui.components.ToolHeader
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -214,6 +214,7 @@ class SpeedTestViewModel @Inject constructor() : ViewModel() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpeedTestScreen(
+    onBack: (() -> Unit)? = null,
     viewModel: SpeedTestViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val s = LocalStrings.current
@@ -231,11 +232,13 @@ fun SpeedTestScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(s.speedTest, fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            ToolHeader(
+                title = s.speedTest,
+                icon = Icons.Filled.Speed,
+                onBack = onBack
             )
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Column(
             modifier = Modifier

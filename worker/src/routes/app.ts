@@ -59,6 +59,7 @@ function publicUser(u: UserRow, sub: SubscriptionRow | null, cfg: RemoteConfigRo
       banner_enabled: cfg.banner_enabled === 1,
       interstitial_enabled: cfg.interstitial_enabled === 1,
       free_ad_multiplier: cfg.free_ad_multiplier,
+      free_uses_per_ad: cfg.free_uses_per_ad,
     },
   };
 }
@@ -166,6 +167,7 @@ export async function handleAppRoute(request: Request, env: Env, path: string): 
       banner_enabled: cfg.banner_enabled === 1,
       interstitial_enabled: cfg.interstitial_enabled === 1,
       free_ad_multiplier: cfg.free_ad_multiplier,
+      free_uses_per_ad: cfg.free_uses_per_ad,
       subscription_price_toman: cfg.subscription_price_toman,
       subscription_duration_days: cfg.subscription_duration_days,
       card_number: cfg.card_number,

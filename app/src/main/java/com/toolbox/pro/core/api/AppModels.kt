@@ -45,6 +45,7 @@ data class RemoteConfigDto(
     @SerialName("banner_enabled") val bannerEnabled: Boolean = true,
     @SerialName("interstitial_enabled") val interstitialEnabled: Boolean = true,
     @SerialName("free_ad_multiplier") val freeAdMultiplier: Int = 2,
+    @SerialName("free_uses_per_ad") val freeUsesPerAd: Int = 0,
     @SerialName("subscription_price_toman") val subscriptionPriceToman: Int = 150000,
     @SerialName("subscription_duration_days") val subscriptionDurationDays: Int = 30,
     @SerialName("card_number") val cardNumber: String = "",

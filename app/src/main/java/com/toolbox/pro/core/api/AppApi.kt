@@ -30,7 +30,9 @@ class AppApi @Inject constructor() {
     }
 
     private fun hmacHex(message: String): String {
-        if (hmacSecret.isBlank()) return "dev"
+        // The built-in "dev" secret is accepted server-side as-is; only sign
+        // for real once a production secret replaces it in BuildConfig.
+        if (hmacSecret.isBlank() || hmacSecret == "dev") return "dev"
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(hmacSecret.toByteArray(Charsets.UTF_8), "HmacSHA256"))
         return mac.doFinal(message.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }

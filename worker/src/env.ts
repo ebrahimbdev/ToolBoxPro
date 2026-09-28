@@ -55,6 +55,7 @@ export interface RemoteConfigRow {
   subscription_price_toman: number;
   subscription_duration_days: number;
   free_ad_multiplier: number;
+  free_uses_per_ad: number;
   card_number: string;
   card_holder: string;
   crypto_wallet: string;

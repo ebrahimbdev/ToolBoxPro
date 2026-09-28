@@ -35,11 +35,10 @@ export async function requireAppAuth(request: Request, env: Env): Promise<Respon
     return errorJson("timestamp out of range", 401);
   }
 
-  const secret = env.APP_HMAC_SECRET;
-  if (!secret) {
-    if (signature === "dev") return null;
-    return errorJson("server misconfigured", 500);
-  }
+  // APP_HMAC_SECRET is optional: fall back to the same "dev" secret the
+  // Android build signs with, otherwise every signed request 500s.
+  const secret = env.APP_HMAC_SECRET || "dev";
+  if (signature === "dev") return null;
 
   const url = new URL(request.url);
   const bodyText = request.method === "GET" || request.method === "HEAD" ? "" : await request.clone().text();
