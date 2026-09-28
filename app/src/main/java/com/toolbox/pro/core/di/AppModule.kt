@@ -3,6 +3,7 @@
 import android.content.Context
 import androidx.room.Room
 import com.toolbox.pro.core.database.AppDatabase
+import com.toolbox.pro.planner.data.PlannerDao
 import com.toolbox.pro.qr.data.QrHistoryDao
 import dagger.Module
 import dagger.Provides
@@ -22,12 +23,20 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "toolbox_database"
-        ).build()
+        )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideQrHistoryDao(database: AppDatabase): QrHistoryDao {
         return database.qrHistoryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePlannerDao(database: AppDatabase): PlannerDao {
+        return database.plannerDao()
     }
 }

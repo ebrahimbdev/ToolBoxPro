@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Speed
@@ -107,6 +108,15 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            ToolCard(
+                title = s.planner,
+                description = s.plannerSubtitle,
+                icon = Icons.Filled.CalendarMonth,
+                gradient = listOf(Color(0xFF6C63FF), Color(0xFF4ECDC4)),
+                onClick = { onNavigate(Screen.Planner.route) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
         }

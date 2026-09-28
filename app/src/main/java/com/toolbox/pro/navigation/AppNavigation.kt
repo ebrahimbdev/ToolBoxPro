@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.QrCode
@@ -38,6 +40,7 @@ import com.toolbox.pro.core.localization.LocalStrings
 import com.toolbox.pro.fileshare.presentation.FileShareScreen
 import com.toolbox.pro.monetization.UsageGate
 import com.toolbox.pro.monetization.UsageGateEntryPoint
+import com.toolbox.pro.planner.presentation.PlannerNavHost
 import com.toolbox.pro.qr.presentation.QrGeneratorScreen
 import com.toolbox.pro.ui.screens.DeviceInfoScreen
 import com.toolbox.pro.ui.screens.HomeScreen
@@ -59,6 +62,12 @@ sealed class Screen(
     data object SpeedTest : Screen("speed_test", "speedTest", Icons.Filled.Home, Icons.Outlined.Home)
     data object DeviceInfo : Screen("device_info", "deviceInfo", Icons.Filled.Home, Icons.Outlined.Home)
     data object Payment : Screen("payment", "upgradeNow", Icons.Filled.Person, Icons.Outlined.Person)
+    data object Planner : Screen(
+        "planner",
+        "planner",
+        Icons.Filled.CalendarMonth,
+        Icons.Outlined.CalendarMonth
+    )
 }
 
 val bottomNavItems = listOf(
@@ -107,6 +116,7 @@ fun ToolBoxNavHost() {
         "speedTest" -> s.speedTest
         "deviceInfo" -> s.deviceInfo
         "upgradeNow" -> s.upgradeNow
+        "planner" -> s.planner
         else -> key
     }
 
@@ -210,6 +220,7 @@ fun ToolBoxNavHost() {
                     DeviceInfoScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Screen.Payment.route) { PaymentScreen(navController = navController) }
+                composable(Screen.Planner.route) { PlannerNavHost() }
             }
         }
     }
