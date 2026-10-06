@@ -24,11 +24,17 @@ class FileServerService : Service() {
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
         const val ACTION_UPDATE_FILES = "ACTION_UPDATE_FILES"
+        const val ACTION_REMOVE_UPLOAD = "ACTION_REMOVE_UPLOAD"
+        const val ACTION_CLEAR_UPLOADS = "ACTION_CLEAR_UPLOADS"
         const val EXTRA_PORT = "EXTRA_PORT"
         const val EXTRA_FILES_JSON = "EXTRA_FILES_JSON"
+        const val EXTRA_UPLOAD_ID = "EXTRA_UPLOAD_ID"
 
         private val _isRunning = MutableStateFlow(false)
         val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+
+        private val _uploadedFiles = MutableStateFlow<List<SharedFile>>(emptyList())
+        val uploadedFiles: StateFlow<List<SharedFile>> = _uploadedFiles.asStateFlow()
 
         @Volatile
         private var currentFiles: List<SharedFile> = emptyList()
@@ -62,6 +68,15 @@ class FileServerService : Service() {
                     fileServer?.setFiles(files)
                 }
             }
+            ACTION_REMOVE_UPLOAD -> {
+                val id = intent.getStringExtra(EXTRA_UPLOAD_ID)
+                if (id != null) {
+                    fileServer?.removeUploaded(id)
+                }
+            }
+            ACTION_CLEAR_UPLOADS -> {
+                fileServer?.clearUploads()
+            }
             ACTION_STOP -> {
                 stopServer()
             }
@@ -71,9 +86,14 @@ class FileServerService : Service() {
 
     private fun startServer(port: Int) {
         if (fileServer == null) {
-            fileServer = FileServer(this, port)
+            fileServer = FileServer(
+                appContext = this,
+                port = port,
+                onUploadsChanged = { list -> _uploadedFiles.value = list }
+            )
             fileServer?.setFiles(currentFiles)
             fileServer?.start()
+            _uploadedFiles.value = fileServer?.uploadedSnapshot() ?: emptyList()
             _isRunning.value = true
             startForeground(NOTIFICATION_ID, createNotification("Server running on port $port"))
         } else {
@@ -85,6 +105,7 @@ class FileServerService : Service() {
         fileServer?.stop()
         fileServer = null
         _isRunning.value = false
+        _uploadedFiles.value = emptyList()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

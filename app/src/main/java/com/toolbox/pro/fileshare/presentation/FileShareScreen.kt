@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -70,6 +71,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.toolbox.pro.core.localization.LocalStrings
+import com.toolbox.pro.fileshare.server.SharedFile
 import com.toolbox.pro.qr.domain.QrGenerator
 import com.toolbox.pro.ui.components.ToolHeader
 import java.text.DecimalFormat
@@ -102,13 +104,8 @@ fun FileShareScreen(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<Uri> -> viewModel.onFileSelected(uris) }
 
-    val toggleEnabled = uiState.isWifiConnected &&
-        (uiState.selectedFiles.isNotEmpty() || uiState.isServerRunning)
-    val toggleReason = when {
-        !uiState.isWifiConnected -> s.wifiRequired
-        uiState.selectedFiles.isEmpty() && !uiState.isServerRunning -> s.addFilesFirst
-        else -> null
-    }
+    val toggleEnabled = uiState.isWifiConnected
+    val toggleReason = if (!uiState.isWifiConnected) s.wifiRequired else null
     val serverReady = uiState.isServerRunning && uiState.serverUrl != null
 
     Scaffold(
@@ -218,6 +215,63 @@ fun FileShareScreen(
                         if (uiState.selectedFiles.isNotEmpty()) {
                             OutlinedButton(onClick = { viewModel.clearFiles() }, shape = RoundedCornerShape(12.dp)) {
                                 Text(s.clearAll)
+                            }
+                        }
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = uiState.isServerRunning || uiState.uploadedFiles.isNotEmpty(),
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(s.receivedUploads, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                if (uiState.uploadedFiles.isNotEmpty()) {
+                                    Text(
+                                        s.filesCount.format(uiState.uploadedFiles.size),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    TextButton(onClick = { viewModel.clearUploads() }) {
+                                        Text(s.clearAll, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (uiState.uploadedFiles.isEmpty()) {
+                            Text(
+                                s.noUploadsYet,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                s.uploadsHint,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.heightIn(max = 240.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(uiState.uploadedFiles, key = { it.id }) { file ->
+                                    UploadedFileItem(file = file, onRemove = { viewModel.removeUpload(file.id) })
+                                }
                             }
                         }
                     }
@@ -442,6 +496,38 @@ fun FileItem(file: SelectedFile, onRemove: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text("${df.format(file.size)} B", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        IconButton(onClick = onRemove) {
+            Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+fun UploadedFileItem(file: SharedFile, onRemove: () -> Unit) {
+    val df = DecimalFormat("#,##0.#", DecimalFormatSymbols(Locale.ROOT))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                file.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                "${df.format(file.size)} B",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         IconButton(onClick = onRemove) {
             Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error)

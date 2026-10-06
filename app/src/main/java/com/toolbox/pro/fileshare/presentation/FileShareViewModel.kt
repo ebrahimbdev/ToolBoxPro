@@ -31,6 +31,7 @@ data class FileShareUiState(
     val networkSpeed: String = "Unknown",
     val isWifiConnected: Boolean = false,
     val selectedFiles: List<SelectedFile> = emptyList(),
+    val uploadedFiles: List<SharedFile> = emptyList(),
     val showQrDialog: Boolean = false
 )
 
@@ -48,6 +49,7 @@ class FileShareViewModel @Inject constructor(
     init {
         loadNetworkInfo()
         observeServerState()
+        observeUploads()
     }
 
     private fun loadNetworkInfo() {
@@ -81,6 +83,29 @@ class FileShareViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun observeUploads() {
+        viewModelScope.launch {
+            FileServerService.uploadedFiles.collect { list ->
+                _uiState.value = _uiState.value.copy(uploadedFiles = list)
+            }
+        }
+    }
+
+    fun removeUpload(fileId: String) {
+        val intent = Intent(appContext, FileServerService::class.java).apply {
+            action = FileServerService.ACTION_REMOVE_UPLOAD
+            putExtra(FileServerService.EXTRA_UPLOAD_ID, fileId)
+        }
+        appContext.startService(intent)
+    }
+
+    fun clearUploads() {
+        val intent = Intent(appContext, FileServerService::class.java).apply {
+            action = FileServerService.ACTION_CLEAR_UPLOADS
+        }
+        appContext.startService(intent)
     }
 
     fun onFileSelected(uris: List<Uri>) {
@@ -157,7 +182,6 @@ class FileShareViewModel @Inject constructor(
 
     fun startServer() {
         if (!_uiState.value.isWifiConnected) return
-        if (_uiState.value.selectedFiles.isEmpty()) return
         val url = WifiUtils.buildServerUrl(_uiState.value.deviceIp) ?: return
         val files = buildSharedFiles()
 
